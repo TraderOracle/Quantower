@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Platforms>AnyCPU</Platforms>
+    <AlgoType>Indicator</AlgoType>
+    <AssemblyName>Killpips_QT</AssemblyName>
+    <RootNamespace>Killpips_QT</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>D:\Quantower\TradingPlatform\v1.140.11\..\..\Settings\Scripts\Indicators\Killpips_QT</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>D:\Quantower\TradingPlatform\v1.140.11\..\..\Settings\Scripts\Indicators\Killpips_QT</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore">
+      <HintPath>..\ATAS-Buy-Sell\bin\Debug\net7.0\PresentationCore.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing.Common">
+      <HintPath>..\Delta-Intensity\bin\Debug\net7.0\System.Drawing.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="TradingPlatform.BusinessLayer">
+      <HintPath>D:\Quantower\TradingPlatform\v1.140.11\bin\TradingPlatform.BusinessLayer.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+</Project>
