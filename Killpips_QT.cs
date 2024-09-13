@@ -11,17 +11,23 @@ using Newtonsoft.Json.Linq;
 using System.Diagnostics.Metrics;
 using TradingPlatform.BusinessLayer.Utils;
 using TradingPlatform.BusinessLayer.Chart;
+using System.Drawing.Text;
 
 namespace Killpips_QT
 {
     public class Killpips_QT : Indicator
     {
+        private bool bDrawn = false;
+        private bool bProcessing = false;
+        private const int LineLengthPixels = 200;
+        private Color LineColor = Color.Red;
+
         [InputParameter("Symbol 1")]
-        public string sym1 = "$NQ1!: vix r1, 19091, vix r2, 19107, vix s1, 18510, vix s2, 18494, range k max, 19272, range k+50%, 19068, range k 0, 18865, range k-50%, 18659, range k min, 18457, kvo, 19170, kvo, 18966, kvo, 18763, kvo, 18557, kvo, 18842";
+        public string sym3 = "$NQ1!: vix r1, 19091, vix r2, 19107, vix s1, 18510, vix s2, 18494, range k max, 19272, range k+50%, 19068, range k 0, 18865, range k-50%, 18659, range k min, 18457, kvo, 19170, kvo, 18966, kvo, 18763, kvo, 18557, kvo, 18842";
         [InputParameter("Symbol 2")]
         public string sym2 = "$ES1!: vix r1, 5545, vix r2, 5549, vix s1, 5439, vix s2, 5435, range k max, 5587, range k+50%, 5545, range k 0, 5503, range k-50%, 5462, range k min, 5420, kvo, 5466, kvo, 5524, kvo, 5482, kvo, 5441, kvo, 5452";
         [InputParameter("Symbol 3")]
-        public string sym3 = "$YM1!: vix r1, 41137, vix r2, 41172, vix s1, 40356, vix s2, 40322, range k max, 41359, range k+50%, 41078, range k 0, 40797, range k-50%, 40518, range k min, 40239, kvo, 41219, kvo, 40938, kvo, 40657, kvo, 40382, kvo, 40617, kvo, 40997, BL 7, 39412.25, BL 8, 39592.37, BL 9, 39683.5, BL 10, 39776.24, BL 4, 39984.2, BL 1, 40617.8, BL 6, 41551.79, BL 5, 41802.1, BL 3, 42015.91, BL 2, 42173.54";
+        public string sym1 = "$YM1!: vix r1, 41499, vix r2, 41533, vix s1, 40636, vix s2, 40602, range k max, 41732, range k+50%, 41442, range k 0, 41144, range k-50%, 40854, range k min, 40560, kvo, 41587, kvo, 41297, kvo, 40999, kvo, 40710, kvo, 40879, kvo, 40602, kvo, 41126, BL 10, 39916.78, BL 5, 40367.97, BL 6, 40482.85, BL 3, 40588.06, BL 8, 40723.85, BL 9, 40823.96, BL 2, 41204.24, BL 1, 41437.22, BL 7, 41509.21, BL 4, 41804.94";
         [InputParameter("Symbol 4")]
         public string sym4 = "$GC1!: vix r1, 2566.7, vix r2, 2569, vix s1, 2518, vix s2, 2515.9, range k max, 2574.3, range k+50%, 2558.8, range k 0, 2543, range k-50%, 2527.6, range k min, 2512, kvo, 2566, kvo, 2550, kvo, 2535, kvo, 2519, kvo, 2530, kvo, 2549.2";
         [InputParameter("Symbol 5")]
@@ -73,6 +79,7 @@ namespace Killpips_QT
         protected override void OnInit()
         {
             ParseSymbols();
+            bDrawn = false;
         }
 
         public override void OnPaintChart(PaintChartEventArgs args)
@@ -81,7 +88,11 @@ namespace Killpips_QT
             if (CurrentChart == null || this.HistoricalData == null)
                 return;
 
+            if (bProcessing)
+                return;
+
             Graphics gr = args.Graphics;
+            
             IChartWindow mainWindow = CurrentChart.MainWindow;
             HistoryItemBar bar1 = new HistoryItemBar();
 
@@ -92,7 +103,7 @@ namespace Killpips_QT
             foreach (shit st in lsL)
                 gr.DrawString(st.label, new Font("Arial", iFontSize), txtBrush, (int)Math.Round(mainWindow.CoordinatesConverter.GetChartX(bar1.TimeRight) - (CurrentChart.BarsWidth / 2)), (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(st.price)));
 
-            //gr.FillRectangle(Brushes.Sienna, (int)Math.Round(mainWindow.CoordinatesConverter.GetChartX(bar1.TimeRight.AddHours(-20)) - (CurrentChart.BarsWidth / 2)), (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(19551)), 40000, 40);
+            //bDrawn = true;
         }
 
         private void ParseSymbols()
@@ -100,10 +111,29 @@ namespace Killpips_QT
             string symbol = "$" + this.Symbol.Name.ToUpper().Replace("/", "").Substring(0, 2);
             if (sym1.Split(':')[0].Trim().ToUpper().Substring(0, 3).Equals(symbol))
                 FetchDataFromString(sym1.Split(':')[1].Trim());
+            if (sym2.Split(':')[0].Trim().ToUpper().Substring(0, 3).Equals(symbol))
+                FetchDataFromString(sym2.Split(':')[1].Trim());
+            if (sym3.Split(':')[0].Trim().ToUpper().Substring(0, 3).Equals(symbol))
+                FetchDataFromString(sym3.Split(':')[1].Trim());
+            if (sym4.Split(':')[0].Trim().ToUpper().Substring(0, 3).Equals(symbol))
+                FetchDataFromString(sym4.Split(':')[1].Trim());
+            if (sym5.Split(':')[0].Trim().ToUpper().Substring(0, 3).Equals(symbol))
+                FetchDataFromString(sym5.Split(':')[1].Trim());
+            if (sym6.Split(':')[0].Trim().ToUpper().Substring(0, 3).Equals(symbol))
+                FetchDataFromString(sym6.Split(':')[1].Trim());
+            if (sym7.Split(':')[0].Trim().ToUpper().Substring(0, 3).Equals(symbol))
+                FetchDataFromString(sym7.Split(':')[1].Trim());
+            if (sym8.Split(':')[0].Trim().ToUpper().Substring(0, 3).Equals(symbol))
+                FetchDataFromString(sym8.Split(':')[1].Trim());
+            if (sym9.Split(':')[0].Trim().ToUpper().Substring(0, 3).Equals(symbol))
+                FetchDataFromString(sym9.Split(':')[1].Trim());
         }
 
         private async void FetchDataFromString(string sLine)
         {
+            if (bDrawn)
+                return;
+
             try
             {
                 int i = 0;
@@ -144,12 +174,13 @@ namespace Killpips_QT
                     }
                     i++;
                 }
-
+                
             }
             catch (Exception ex)
             {
                 //this.Log("Error fetching data from API: " + ex.Message);
             }
+
         }
 
         protected override void OnUpdate(UpdateArgs args)
@@ -157,8 +188,14 @@ namespace Killpips_QT
             if (this.Count < 2)
                 return;
 
-            if (args.Reason == UpdateReason.NewTick && this.Time(this.Count - 2) < this.Time())
+            if (args.Reason == UpdateReason.NewBar)
+            {
+                bProcessing = true;
                 ParseSymbols();
+                bProcessing = false;
+                bDrawn = true;
+            }
+
         }
     }
 }
