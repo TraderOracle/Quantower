@@ -10,24 +10,24 @@
     <RootNamespace>Killpips_QT</RootNamespace>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>D:\Quantower\TradingPlatform\v1.140.11\..\..\Settings\Scripts\Indicators\Killpips_QT</OutputPath>
+    <OutputPath>D:\Quantower\TradingPlatform\v1.141.19\..\..\Settings\Scripts\Indicators\Killpips_QT</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>D:\Quantower\TradingPlatform\v1.140.11\..\..\Settings\Scripts\Indicators\Killpips_QT</OutputPath>
+    <OutputPath>D:\Quantower\TradingPlatform\v1.141.19\..\..\Settings\Scripts\Indicators\Killpips_QT</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="PresentationCore">
-      <HintPath>..\ATAS-Buy-Sell\bin\Debug\net7.0\PresentationCore.dll</HintPath>
-    </Reference>
     <Reference Include="System.Drawing.Common">
       <HintPath>..\Delta-Intensity\bin\Debug\net7.0\System.Drawing.Common.dll</HintPath>
     </Reference>
     <Reference Include="TradingPlatform.BusinessLayer">
-      <HintPath>D:\Quantower\TradingPlatform\v1.140.11\bin\TradingPlatform.BusinessLayer.dll</HintPath>
+      <HintPath>D:\Quantower\TradingPlatform\v1.141.19\bin\TradingPlatform.BusinessLayer.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="call c:\temp\copy_QT.bat" />
+  </Target>
 </Project>
