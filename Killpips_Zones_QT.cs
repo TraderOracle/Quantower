@@ -98,15 +98,16 @@ namespace Killpips_QT
                 if (i > 0 && i < this.HistoricalData.Count && this.HistoricalData[i, SeekOriginHistory.Begin] is HistoryItemBar bar)
                     bar1 = (HistoryItemBar)this.HistoricalData[i - 1, SeekOriginHistory.Begin];
 
-            SolidBrush redSmall = new SolidBrush(Color.FromArgb(100, 94, 15, 9));
-            SolidBrush redMed = new SolidBrush(Color.FromArgb(83, 166, 22, 12));
-            SolidBrush redLarge = new SolidBrush(Color.FromArgb(97, 176, 74, 19));
-            SolidBrush greenSmall = new SolidBrush(Color.FromArgb(148, 9, 92, 35));
-            SolidBrush greenMed = new SolidBrush(Color.FromArgb(100, 2, 179, 57));
-            SolidBrush greenLarge = new SolidBrush(Color.FromArgb(98, 103, 224, 4));
+            SolidBrush redSmall = new SolidBrush(Color.FromArgb(84, 94, 15, 9));
+            SolidBrush redMed = new SolidBrush(Color.FromArgb(71, 166, 22, 12));
+            SolidBrush redLarge = new SolidBrush(Color.FromArgb(82, 176, 74, 19));
+            SolidBrush greenSmall = new SolidBrush(Color.FromArgb(98, 9, 92, 35));
+            SolidBrush greenMed = new SolidBrush(Color.FromArgb(71, 2, 179, 57));
+            SolidBrush greenLarge = new SolidBrush(Color.FromArgb(68, 103, 224, 4));
 
             foreach (shit st in lsL)
             {
+                int iRight = mainWindow.ClientRectangle.Right - 20;
                 int iY = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(st.price));
                 int sS0 = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(iS0));
                 int sS1 = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(iS1));
@@ -121,18 +122,18 @@ namespace Killpips_QT
                 gr.DrawString(st.label, new Font("Arial", 8), new SolidBrush(Color.White), iX, iY);
 
                 if (st.label == "RD0")
-                    gr.FillRegion(greenSmall, new Region(new RectangleF(0, sR1, 2100, sR0 - sR1)));
+                    gr.FillRegion(greenSmall, new Region(new RectangleF(0, sR1, iRight, sR0 - sR1)));
                 if (st.label == "RD1")
-                    gr.FillRegion(greenMed, new Region(new RectangleF(0, sR2, 2100, sR1 - sR2)));
+                    gr.FillRegion(greenMed, new Region(new RectangleF(0, sR2, iRight, sR1 - sR2)));
                 if (st.label == "RD2")
-                    gr.FillRegion(greenLarge, new Region(new RectangleF(0, svixR1, 2100, sR2 - svixR1)));
+                    gr.FillRegion(greenLarge, new Region(new RectangleF(0, svixR1, iRight, sR2 - svixR1)));
 
                 if (st.label == "SD0") 
-                    gr.FillRegion(redSmall, new Region(new RectangleF(0, sS0, 2100, sS1 - sS0)));
+                    gr.FillRegion(redSmall, new Region(new RectangleF(0, sS0, iRight, sS1 - sS0)));
                 if (st.label == "SD1")
-                    gr.FillRegion(redMed, new Region(new RectangleF(0, sS1, 2100, sS2 - sS1)));
+                    gr.FillRegion(redMed, new Region(new RectangleF(0, sS1, iRight, sS2 - sS1)));
                 if (st.label == "SD2")
-                    gr.FillRegion(redLarge, new Region(new RectangleF(0, sS2, 2100, svixS1 - sS2)));
+                    gr.FillRegion(redLarge, new Region(new RectangleF(0, sS2, iRight, svixS1 - sS2)));
             }
 
             //bDrawn = true;
