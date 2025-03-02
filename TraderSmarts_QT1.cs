@@ -24,7 +24,7 @@ namespace TraderSmarts_QT
     {
         #region VARIABLES
 
-        private const string sVersion = "1.0";
+        private const string sVersion = "1.1";
         private bool bUseAlerts = true;
         private bool bAlertWick = false;
         private bool bDrawn = false;
@@ -51,6 +51,8 @@ namespace TraderSmarts_QT
         public bool bShowMTS = true;
         [InputParameter("Show TS")]
         public bool bShowTS = true;
+        [InputParameter("Input File")]
+        public System.String txtFile = @"c:\temp\tradersmarts.txt";
 
         [InputParameter("Font Color")]
         public Brush txtBrush = Brushes.White;
@@ -59,7 +61,7 @@ namespace TraderSmarts_QT
         [InputParameter("Short Color")]
         public Color cShort = Color.Red;
         [InputParameter("Line in Sand Color")]
-        public Color cSand = Color.LightSteelBlue;
+        public Color cSand = Color.FromArgb(255, 143, 83, 237);
         [InputParameter("MTS Color")]
         public Color cMTS = Color.Beige;
         [InputParameter("TS Color")]
@@ -99,13 +101,36 @@ namespace TraderSmarts_QT
                 if (i > 0 && i < this.HistoricalData.Count && this.HistoricalData[i, SeekOriginHistory.Begin] is HistoryItemBar bar)
                     bar1 = (HistoryItemBar)this.HistoricalData[i - 1, SeekOriginHistory.Begin];
 
-            SolidBrush semiTransparentRedBrush = new SolidBrush(Color.FromArgb(108, 255, 0, 0));
+            SolidBrush redLarge = new SolidBrush(Color.FromArgb(122, 176, 74, 19));
+            SolidBrush greenLarge = new SolidBrush(Color.FromArgb(128, 103, 224, 4));
+            SolidBrush purple = new SolidBrush(Color.FromArgb(108, 123, 48, 242));
 
             foreach (days st in lsDays)
             {
-                int iY = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(st.price1));
+                SolidBrush howdy = st.label.Contains("Short") ? redLarge :
+                    st.label.Contains("Long") ? greenLarge : purple;
+
+                int iY1 = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(st.price1));
+                int iY2 = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(st.price2));
                 int iX = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartX(bar1.TimeRight) - (CurrentChart.BarsWidth / 2) + 100);
-                gr.DrawString(st.label, new Font("Arial", iFontSize), txtBrush, iX, iY);
+                int iRight = mainWindow.ClientRectangle.Right - 20;
+
+                if (iY1 != iY2)
+                {
+                    if (iY2 > iY1)
+                    {
+                        gr.FillRegion(howdy, new Region(new RectangleF(0, iY1, iRight, iY2 - iY1)));
+                        gr.DrawString(st.label, new Font("Arial", iFontSize), txtBrush, iX, iY1);
+                    }
+                    else
+                    {
+                        gr.FillRegion(howdy, new Region(new RectangleF(0, iY2, iRight, iY1 - iY2)));
+                        gr.DrawString(st.label, new Font("Arial", iFontSize), txtBrush, iX, iY2);
+                    }
+                }
+                else
+                    gr.DrawString(st.label, new Font("Arial", iFontSize), txtBrush, iX, iY1);
+
                 //gr.DrawRectangle(new Pen(Brushes.Red), new Rectangle(iX, iY, 500, 550));
                 //gr.FillRectangle(semiTransparentRedBrush, new Rectangle(0, iY, mainWindow.ClientRectangle.Width - 20, 20));
             }
@@ -135,10 +160,7 @@ namespace TraderSmarts_QT
                 a.price2 = Convert.ToDouble(price2);
                 lsDays.Add(a);
                 int iWidth = s.Contains("Sand") ? 4 : 1;
-                LineLevel ll = new LineLevel(a.price1, s, c, iWidth, LineStyle.Solid);
-                if (!LinesLevels.Contains(ll))
-                    this.AddLineLevel(ll);
-                if (a.price1 != a.price2)
+                if (a.price1 == a.price2)
                 {
                     LineLevel lll = new LineLevel(a.price2, s, c, iWidth, LineStyle.Solid);
                     if (!LinesLevels.Contains(lll))
@@ -167,7 +189,7 @@ namespace TraderSmarts_QT
         {
             try
             {
-                string[] lines = File.ReadAllLines(@"c:\temp\tradersmarts.txt");
+                string[] lines = File.ReadAllLines(txtFile);
                 for (int iR = 0; iR < lines.Length; iR += 1)
                 {
                     string s = lines[iR];
@@ -180,7 +202,7 @@ namespace TraderSmarts_QT
                         foreach (string p in price)
                             AddRecord(p, "MTS");
                     }
-                    else if (s.Length > 800 && bShowTS)
+                    else if (s.Length > 400 && bShowTS)
                     {
                         string[] ass = s.Replace(" ", "").Split(",");
                         foreach (string p in ass)
