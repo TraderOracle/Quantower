@@ -118,7 +118,7 @@ namespace Killpips_QT
                 int svixR1 = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(ivixR1)); 
 
                 int iX = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartX(bar1.TimeRight) - (CurrentChart.BarsWidth / 2) + 100);
-                //gr.DrawString(st.label, new Font("Arial", iFontSize), txtBrush, iX, iY);
+                gr.DrawString(st.label, new Font("Arial", 8), new SolidBrush(Color.White), iX, iY);
 
                 if (st.label == "RD0")
                     gr.FillRegion(greenSmall, new Region(new RectangleF(0, sR1, 2100, sR0 - sR1)));
@@ -188,11 +188,11 @@ namespace Killpips_QT
                         shit st = new shit();
                         st.price = Convert.ToDouble(price);
                         st.label = desc;
-                        //Color cl = Color.Gray;
+                        Color cl = Color.Gray;
                         //if (desc.Contains("range") || desc.Contains("HV"))
                         //    cl = crange;
-                        //if (desc.ToLower().Contains("min") || desc.Contains("VAL"))
-                        //    cl = cmin;
+                        if (desc.ToLower().Contains("min") || desc.Contains("VAL"))
+                            cl = Color.Lime;
                         //else if (desc.Contains("kvo1"))
                         //    cl = ckvo1;
                         //else if (desc.Contains("SD"))
@@ -201,15 +201,16 @@ namespace Killpips_QT
                         //    cl = cRD;
                         //else if (desc.Contains("kvo2") || desc.ToLower().Contains("support"))
                         //    cl = ckvo2;
-                        //else if (desc.ToLower().Contains("max") || desc.Contains("VAH"))
-                        //    cl = cmax;
-                        //else if (desc.Contains("vix"))
-                        //    cl = cvix;
+                        else if (desc.ToLower().Contains("max") || desc.Contains("VAH"))
+                            cl = Color.OrangeRed;
+                        else if (desc.Contains("HV"))
+                            cl = Color.Purple;
                         //st.color = cl;
                         lsL.Add(st);
-                        if (desc.Trim().Contains("HV"))
+                        if (desc.Trim().Contains("HV") || cl != Color.Gray)
                         {
-                            LineLevel ll = new LineLevel(st.price, desc, Color.Purple, 3, LineStyle.Dot);
+                            int iWidth = desc.Trim().Contains("HV") ? 3 : 1;
+                            LineLevel ll = new LineLevel(st.price, desc, cl, iWidth, LineStyle.Dot);
                             if (!LinesLevels.Contains(ll))
                                 this.AddLineLevel(ll);
                         }
