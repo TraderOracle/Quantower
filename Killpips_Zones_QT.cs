@@ -237,7 +237,7 @@ namespace Killpips_QT
             if (args.Reason == UpdateReason.NewBar)
             {
                 bProcessing = true;
-                ParseSymbols();
+                //ParseSymbols();
                 bProcessing = false;
                 bDrawn = true;
             }
