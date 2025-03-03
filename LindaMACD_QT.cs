@@ -2,90 +2,73 @@ using System;
 using System.Drawing;
 using TradingPlatform.BusinessLayer;
 
-namespace QuantowerIndicators
+namespace Oscillators;
+
+public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWatchlistIndicator
 {
-    public class LindaMACD : Indicator
+    private Indicator fastSMA;
+    private Indicator slowSMA;
+    private Indicator signal;
+
+    [InputParameter("Fast SMA Period", 0, 1, 999, 1, 0)]
+    public int FastPeriod = 3;
+
+    [InputParameter("Slow SMA Period", 1, 1, 999, 1, 0)]
+    public int SlowPeriod = 9;
+
+    [InputParameter("Signal SMA Period", 2, 1, 999, 1, 0)]
+    public int SignalPeriod = 16;
+
+    public int MinHistoryDepths => this.MaxEMAPeriod + this.SignalPeriod;
+    private int MaxEMAPeriod => Math.Max(this.FastPeriod, this.SlowPeriod);
+
+    public IndicatorMovingAverageConvergenceDivergence()
+        : base()
     {
-        [InputParameter("Fast SMA Period", 0, 1, 999, 1, 0)]
-        public int FastPeriod = 3;
+        this.Name = "Linda MACD";
 
-        [InputParameter("Slow SMA Period", 1, 1, 999, 1, 0)]
-        public int SlowPeriod = 9;
+        this.AddLineSeries("MACD", Color.DodgerBlue, 1, LineStyle.Solid);
+        this.AddLineSeries("HistogramPos", Color.Green, 10, LineStyle.Columns);
+        this.AddLineSeries("HistogramNeg", Color.Red, 10, LineStyle.Columns);
 
-        [InputParameter("Signal SMA Period", 2, 1, 999, 1, 0)]
-        public int SignalPeriod = 16;
+        this.SeparateWindow = true;
+    }
 
-        private double[] priceBuffer;
-        private double[] macdBuffer;
+    protected override void OnInit()
+    {
+        this.fastSMA = Core.Indicators.BuiltIn.SMA(this.FastPeriod, PriceType.Typical);
+        this.slowSMA = Core.Indicators.BuiltIn.SMA(this.SlowPeriod, PriceType.Typical);
+        this.signal = Core.Indicators.BuiltIn.SMA(this.SignalPeriod, PriceType.Typical);
 
-        public LindaMACD()
+        this.AddIndicator(this.fastSMA);
+        this.AddIndicator(this.slowSMA);
+        this.AddIndicator(this.signal);
+    }
+
+    protected override void OnUpdate(UpdateArgs args)
+    {
+        if (this.Count < this.MaxEMAPeriod)
+            return;
+
+        double fast = this.fastSMA.GetValue();
+        double slow = this.slowSMA.GetValue();
+        double sig = this.signal.GetValue();
+
+        double macdLine = fast - slow;
+        double histogram = macdLine - sig;
+
+        if (macdLine >= 0)
         {
-            this.Name = "Linda MACD";
-            this.Description = "A MACD indicator computed using Simple Moving Averages (SMA) instead of EMAs";
-            this.SeparateWindow = true; 
-
-            this.AddLineSeries("MACD", Color.Blue, 1, LineStyle.Solid);
-            this.AddLineSeries("Signal", Color.Red, 1, LineStyle.Solid);
-            this.AddLineSeries("HistogramPos", Color.Green, 10, LineStyle.Histogramm);
-            this.AddLineSeries("HistogramNeg", Color.Red, 10, LineStyle.Histogramm);
+            //this.SetValue(0);
+            this.SetValue(macdLine, 1);
+            this.SetValue(0, 2);
         }
-
-        protected override void OnInit()
+        else
         {
-            int dataCount = this.HistoricalData.Count;
-            priceBuffer = new double[dataCount];
-            macdBuffer = new double[dataCount];
-        }
-
-        protected override void OnUpdate(UpdateArgs args)
-        {
-            if (args.Reason == UpdateReason.NewBar || args.Reason == UpdateReason.HistoricalBar)
-            {
-                int lastIndex = this.Count - 1;
-
-                double closePrice = (double)this.GetPrice(PriceType.Close, 0);
-                priceBuffer[lastIndex] = closePrice;
-
-                double fastSMA = SimpleMovingAverage(priceBuffer, FastPeriod, lastIndex);
-
-                double slowSMA = SimpleMovingAverage(priceBuffer, SlowPeriod, lastIndex);
-
-                double macdLine = fastSMA - slowSMA;
-                macdBuffer[lastIndex] = macdLine;
-
-                double signalLine = SimpleMovingAverage(macdBuffer, SignalPeriod, lastIndex);
-
-                double histogram = macdLine - signalLine;
-
-                if (histogram >= 0)
-                {
-                    // Positive histogram
-                    this.SetValue(histogram, 2);
-                    this.SetValue(0, 3);  // Clear the negative line
-                }
-                else
-                {
-                    // Negative histogram
-                    this.SetValue(0, 2); // Clear the positive line
-                    this.SetValue(Math.Abs(histogram), 3);
-                }
-
-                //this.SetValue(macdLine, 0);
-                //this.SetValue(signalLine, 1);
-                //this.SetValue(Math.Abs(histogram), 2);
-            }
-        }
-
-        private double SimpleMovingAverage(double[] source, int length, int currentIndex)
-        {
-            if (length <= 0 || currentIndex - length + 1 < 0)
-                return 0.0;
-
-            double sum = 0.0;
-            for (int i = currentIndex; i > currentIndex - length; i--)
-                sum += source[i];
-
-            return sum / length;
+            //this.SetValue(0);
+            this.SetValue(0, 1);
+            this.SetValue(Math.Abs(macdLine), 2);
         }
     }
+
 }
