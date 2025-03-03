@@ -79,13 +79,12 @@ namespace TraderSmarts_QT
 
         protected override void OnInit()
         {
-            FetchData(0);
+            FetchData();
             bDrawn = false;
         }
 
         public override void OnPaintChart(PaintChartEventArgs args)
         {
-            base.OnPaintChart(args);
             if (CurrentChart == null || this.HistoricalData == null)
                 return;
 
@@ -112,20 +111,26 @@ namespace TraderSmarts_QT
 
                 int iY1 = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(st.price1));
                 int iY2 = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(st.price2));
-                int iX = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartX(bar1.TimeRight) - (CurrentChart.BarsWidth / 2) + 100);
+                int iX = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartX(bar1.TimeRight) - (CurrentChart.BarsWidth / 2) + 30);
                 int iRight = mainWindow.ClientRectangle.Right - 20;
 
                 if (iY1 != iY2)
                 {
                     if (iY2 > iY1)
                     {
-                        gr.FillRegion(howdy, new Region(new RectangleF(0, iY1, iRight, iY2 - iY1)));
-                        gr.DrawString(st.label, new Font("Arial", iFontSize), txtBrush, iX, iY1);
+                        //if (! gr.IsVisible(new RectangleF(0, iY1, iRight, iY2 - iY1)))
+                        {
+                            gr.FillRegion(howdy, new Region(new RectangleF(0, iY1, iRight, iY2 - iY1)));
+                            gr.DrawString(st.label, new Font("Arial", iFontSize), txtBrush, iX, iY1);
+                        }
                     }
                     else
                     {
-                        gr.FillRegion(howdy, new Region(new RectangleF(0, iY2, iRight, iY1 - iY2)));
-                        gr.DrawString(st.label, new Font("Arial", iFontSize), txtBrush, iX, iY2);
+                        //if (!gr.IsVisible(new RectangleF(0, iY1, iRight, iY2 - iY1)))
+                        {
+                            gr.FillRegion(howdy, new Region(new RectangleF(0, iY2, iRight, iY1 - iY2)));
+                            gr.DrawString(st.label, new Font("Arial", iFontSize), txtBrush, iX, iY2);
+                        }
                     }
                 }
                 else
@@ -136,6 +141,7 @@ namespace TraderSmarts_QT
             }
 
             //bDrawn = true;
+            base.OnPaintChart(args);
         }
 
         #region MISC
@@ -185,7 +191,7 @@ namespace TraderSmarts_QT
 
         #region PROCESS DATA
 
-        protected bool FetchData(int bar)
+        protected bool FetchData()
         {
             try
             {
@@ -256,6 +262,7 @@ namespace TraderSmarts_QT
             if (args.Reason == UpdateReason.NewBar)
             {
                 bProcessing = true;
+                //FetchData();
                 bProcessing = false;
                 bDrawn = true;
             }

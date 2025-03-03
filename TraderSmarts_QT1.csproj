@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Platforms>AnyCPU</Platforms>
+    <AlgoType>Indicator</AlgoType>
+    <AssemblyName>TraderSmarts_QT1</AssemblyName>
+    <RootNamespace>TraderSmarts_QT1</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>D:\Quantower\TradingPlatform\v1.142.9\..\..\Settings\Scripts\Indicators\TraderSmarts_QT1</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>D:\Quantower\TradingPlatform\v1.142.9\..\..\Settings\Scripts\Indicators\TraderSmarts_QT1</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Drawing.Common">
+      <HintPath>..\Delta-Intensity\bin\Debug\net7.0\System.Drawing.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="TradingPlatform.BusinessLayer">
+      <HintPath>D:\Quantower\TradingPlatform\v1.142.9\bin\TradingPlatform.BusinessLayer.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+</Project>
