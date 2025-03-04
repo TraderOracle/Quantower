@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.ConstrainedExecution;
@@ -45,7 +46,7 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
     private Indicator fastSMA;
     private Indicator slowSMA;
     private Indicator signal;
-    private Indicator BB;
+    private Indicator Rsi;
     private Indicator ma;
     public List<Bars> barslist = new List<Bars>();
     public List<Imbalance> volImb = new List<Imbalance>();
@@ -80,11 +81,13 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
         this.slowSMA = Core.Indicators.BuiltIn.SMA(this.SlowPeriod, PriceType.Typical);
         this.signal = Core.Indicators.BuiltIn.SMA(this.SignalPeriod, PriceType.Typical);
         this.ma = Core.Indicators.BuiltIn.MA(20, PriceType.Close, MaMode.SMA, Indicator.DEFAULT_CALCULATION_TYPE);
+        this.Rsi = Core.Indicators.BuiltIn.RSI(14, PriceType.Close, RSIMode.Exponential, MaMode.EMA, 10);
 
         this.AddIndicator(this.fastSMA);
         this.AddIndicator(this.slowSMA);
         this.AddIndicator(this.signal);
         this.AddIndicator(this.ma);
+        this.AddIndicator(this.Rsi);
     }
 
     public override void OnPaintChart(PaintChartEventArgs args)
@@ -117,7 +120,8 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
                 int xCoord = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartX(item.bar.TimeRight) - (CurrentChart.BarsWidth / 2));
                 int yCoord = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(drawingPrice));
 
-                graphics.FillEllipse(new SolidBrush(item.color), xCoord - 10, yCoord - 10, 8, 8);
+                //graphics.FillEllipse(new SolidBrush(item.color), xCoord - 10, yCoord - 10, 8, 8);
+                graphics.DrawString("TR", new Font("Arial", 11, FontStyle.Bold), new SolidBrush(Color.Yellow), xCoord - 10, yCoord);
             });
     }
 
@@ -166,8 +170,10 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
 
             bool c0G = Close() > Open();
             bool c1G = Close(1) > Open(1);
+            bool c2G = Close(2) > Open(2);
             bool c0R = Close() < Open();
             bool c1R = Close(1) < Open(1);
+            bool c2R = Close(2) < Open(2);
 
             double c0Body = Math.Abs(Close() - Open());
             double c1Body = Math.Abs(Close(1) - Open(1));
@@ -199,6 +205,25 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
                 //    barslist.Add(b);
                 SetBarColor(Color.White);
             }
+
+            double rsi = Rsi.GetValue();
+            double rsi1 = Rsi.GetValue(1);
+            double rsi2 = Rsi.GetValue(2);
+
+            // TRAMPOLINE
+            if (c0R && c1R && Close() < Close(1) && (rsi >= 70 || rsi1 >= 70 || rsi2 >= 70) && c2G && High(2) >= ub)
+            {
+                Bars b = new Bars(candle, 1, Bars.HiLo.Short, Color.White);
+                if (!barslist.Contains(b))
+                    barslist.Add(b);
+            }
+            if (c0G && c1G && candle.Close > Close(1) && (rsi < 25 || rsi1 < 25 || rsi2 < 25) && c2R && Low(2) <= lb)
+            {
+                Bars b = new Bars(candle, 1, Bars.HiLo.Long, Color.White);
+                if (!barslist.Contains(b))
+                    barslist.Add(b);
+            }
+
         }
 
     }
