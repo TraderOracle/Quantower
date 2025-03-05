@@ -47,28 +47,36 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
 
     protected override void OnUpdate(UpdateArgs args)
     {
-        if (this.Count < this.MaxEMAPeriod)
+        if (this.Count < 100)
             return;
 
-        double fast = this.fastSMA.GetValue();
-        double slow = this.slowSMA.GetValue();
-        double sig = this.signal.GetValue();
-
-        double macdLine = fast - slow;
-        double histogram = macdLine - sig;
-
-        if (macdLine >= 0)
+        try
         {
-            //this.SetValue(0);
-            this.SetValue(macdLine, 1);
-            this.SetValue(0, 2);
+            double fast = this.fastSMA.GetValue();
+            double slow = this.slowSMA.GetValue();
+            double sig = this.signal.GetValue();
+
+            double macdLine = fast - slow;
+            double histogram = macdLine - sig;
+
+            if (macdLine >= 0)
+            {
+                //this.SetValue(0);
+                this.SetValue(macdLine, 1);
+                this.SetValue(0, 2);
+            }
+            else
+            {
+                //this.SetValue(0);
+                this.SetValue(0, 1);
+                this.SetValue(Math.Abs(macdLine), 2);
+            }
         }
-        else
+        catch (Exception)
         {
-            //this.SetValue(0);
-            this.SetValue(0, 1);
-            this.SetValue(Math.Abs(macdLine), 2);
+
         }
+
     }
 
 }

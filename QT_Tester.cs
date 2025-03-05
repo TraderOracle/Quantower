@@ -41,53 +41,62 @@ public class Bars
     }
 }
 
-public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWatchlistIndicator
+public sealed class IndicatorOmnibus : Indicator, IWatchlistIndicator
 {
     private Indicator fastSMA;
     private Indicator slowSMA;
     private Indicator signal;
     private Indicator Rsi;
     private Indicator ma;
+    private Indicator BB;
+    private Indicator SAR;
+    private Indicator waddahFast;
+    private Indicator waddahSlow;
+
     public List<Bars> barslist = new List<Bars>();
     public List<Imbalance> volImb = new List<Imbalance>();
+    public String sNextAlert = string.Empty;
 
-    [InputParameter("Fast SMA Period", 0, 1, 999, 1, 0)]
-    public int FastPeriod = 3;
+    [InputParameter("Play Alert Sounds")]
+    public bool bAlerts = true;
+    [InputParameter("Sound Directory")]
+    public String sWavDir = @"C:\temp\sounds";
 
-    [InputParameter("Slow SMA Period", 1, 1, 999, 1, 0)]
-    public int SlowPeriod = 9;
+    public int MinHistoryDepths => this.MaxEMAPeriod + 16;
+    private int MaxEMAPeriod => Math.Max(3, 9);
 
-    [InputParameter("Signal SMA Period", 2, 1, 999, 1, 0)]
-    public int SignalPeriod = 16;
-
-    public int MinHistoryDepths => this.MaxEMAPeriod + this.SignalPeriod;
-    private int MaxEMAPeriod => Math.Max(this.FastPeriod, this.SlowPeriod);
-
-    public IndicatorMovingAverageConvergenceDivergence()
+    public IndicatorOmnibus()
         : base()
     {
-        this.Name = "QT_Tester2";
- 
-        //this.AddLineSeries("MACD", Color.DodgerBlue, 1, LineStyle.Solid);
-        //this.AddLineSeries("HistogramPos", Color.Green, 10, LineStyle.Columns);
-        //this.AddLineSeries("HistogramNeg", Color.Red, 10, LineStyle.Columns);
-
-        //this.SeparateWindow = true;
+        this.Name = "Omnibus";
     }
 
     protected override void OnInit()
     {
-        this.fastSMA = Core.Indicators.BuiltIn.SMA(this.FastPeriod, PriceType.Typical);
-        this.slowSMA = Core.Indicators.BuiltIn.SMA(this.SlowPeriod, PriceType.Typical);
-        this.signal = Core.Indicators.BuiltIn.SMA(this.SignalPeriod, PriceType.Typical);
+        // LINDA MACD
+        this.fastSMA = Core.Indicators.BuiltIn.SMA(3, PriceType.Typical);
+        this.slowSMA = Core.Indicators.BuiltIn.SMA(9, PriceType.Typical);
+        this.signal = Core.Indicators.BuiltIn.SMA(16, PriceType.Typical);
         this.ma = Core.Indicators.BuiltIn.MA(20, PriceType.Close, MaMode.SMA, Indicator.DEFAULT_CALCULATION_TYPE);
-        this.Rsi = Core.Indicators.BuiltIn.RSI(14, PriceType.Close, RSIMode.Exponential, MaMode.EMA, 10);
-
         this.AddIndicator(this.fastSMA);
         this.AddIndicator(this.slowSMA);
         this.AddIndicator(this.signal);
         this.AddIndicator(this.ma);
+
+        // WADDAH EXPLOSION
+        waddahFast = Core.Indicators.BuiltIn.SMA(20, PriceType.Close);
+        waddahSlow = Core.Indicators.BuiltIn.SMA(40, PriceType.Close);
+        AddIndicator(waddahFast);
+        AddIndicator(waddahSlow);
+
+        // REMAINDER
+        this.Rsi = Core.Indicators.BuiltIn.RSI(14, PriceType.Close, RSIMode.Exponential, MaMode.EMA, 10);
+        this.BB = Core.Indicators.BuiltIn.BB(20, 2, PriceType.Close, MaMode.EMA);
+        this.SAR = Core.Indicators.BuiltIn.SAR(0.02, 0.2);
         this.AddIndicator(this.Rsi);
+        this.AddIndicator(this.BB);
+        this.AddIndicator(this.SAR);
+
     }
 
     public override void OnPaintChart(PaintChartEventArgs args)
@@ -105,11 +114,13 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
                 int xCoord = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartX(item.begin.TimeRight));
                 int yy = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(item.begin.Close));
                 int iEnd = xCoord + 10000;
-                if (item.end != null)
+                if (item.end != null) 
                     iEnd = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartX(item.end.TimeRight) - 
-                        (CurrentChart.BarsWidth / 2));
-
-                graphics.DrawLine(new Pen(new SolidBrush(Color.FromArgb(255, 139, 188, 252)), 3), xCoord, yy, iEnd, yy);
+                        (CurrentChart.BarsWidth / 2)); 
+                 
+                Pen dashPen = new Pen(Color.FromArgb(255, 139, 188, 252), 2);
+                dashPen.DashPattern = new float [] { 5, 1, 3, 1 };
+                graphics.DrawLine(dashPen, xCoord, yy, iEnd, yy);
             });
 
         barslist.FindAll(item => true)
@@ -120,14 +131,19 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
                 int xCoord = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartX(item.bar.TimeRight) - (CurrentChart.BarsWidth / 2));
                 int yCoord = (int)Math.Round(mainWindow.CoordinatesConverter.GetChartY(drawingPrice));
 
-                //graphics.FillEllipse(new SolidBrush(item.color), xCoord - 10, yCoord - 10, 8, 8);
-                graphics.DrawString("TR", new Font("Arial", 11, FontStyle.Bold), new SolidBrush(Color.Yellow), xCoord - 10, yCoord);
+                graphics.FillEllipse(new SolidBrush(item.color), xCoord - 5, yCoord - 12, 5, 5);
+                //graphics.DrawString("TR", new Font("Arial", 11, FontStyle.Bold), new SolidBrush(Color.Yellow), xCoord - 10, yCoord);
             });
     }
 
-    private void SendAlert()
+    private void SendAlert(String sSound)
     {
-
+        sNextAlert = string.Empty;
+        try
+        {
+            System.Diagnostics.Process.Start("cmd.exe", "/c " + sWavDir + "\\" + sSound + ".wav");
+        }
+        catch { }
     }
 
     protected override void OnUpdate(UpdateArgs args)
@@ -135,10 +151,41 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
         if (this.Count < this.MaxEMAPeriod)
             return;
 
-        if (args.Reason == UpdateReason.NewBar || args.Reason == UpdateReason.HistoricalBar)
+        if (args.Reason == UpdateReason.NewBar && sNextAlert != string.Empty)
+            SendAlert(sNextAlert);
+
+            if (args.Reason == UpdateReason.NewBar || args.Reason == UpdateReason.HistoricalBar)
         {
             HistoryItemBar candle = (HistoryItemBar)HistoricalData[Count - 1, SeekOriginHistory.Begin];
             HistoryItemBar prev = (HistoryItemBar)HistoricalData[Count - 2, SeekOriginHistory.Begin];
+
+            // WADDAH EXPLOSION
+            var fastMinusSlowCurr = waddahFast.GetValue(0) - waddahSlow.GetValue(0);
+            var fastMinusSlowPrev = waddahFast.GetValue(1) - waddahSlow.GetValue(1);
+            var fastMinusSlowMorePrev = waddahFast.GetValue(2, 0) - waddahSlow.GetValue(2, 0);
+            var t1 = (fastMinusSlowCurr - fastMinusSlowPrev) * 150;
+            var t1Prev = (fastMinusSlowPrev - fastMinusSlowMorePrev) * 150;
+            var e1 = BB.GetValue(0, 0) - BB.GetValue(0, 2);
+            var trendUp = t1 >= 0 ? t1 : 0;
+            var trendUpPrev = t1Prev >= 0 ? t1Prev : 0;
+            var trendDown = t1 < 0 ? (t1 * -1) : 0;
+            var trendDownPrev = t1Prev < 0 ? (t1Prev * -1) : 0;
+            bool bWaddahUp = t1 > 0;
+            bool bWaddahDown = t1 <= 0;
+
+            // LINDA MACD
+            double fast = this.fastSMA.GetValue();
+            double slow = this.slowSMA.GetValue();
+            double sig = this.signal.GetValue();
+            double macdLine = fast - slow;
+            double histogram = macdLine - sig;
+
+            //if (macdLine > 0 && bWaddahUp)
+            //{
+            //    Bars b = new Bars(candle, 1, Bars.HiLo.Long, Color.Lime);
+            //    if (!barslist.Contains(b))
+            //        barslist.Add(b);
+            //}
 
             // VOLUME IMBALANCE RESOLUTION
             volImb.FindAll(item => true).ForEach(item =>
@@ -149,12 +196,12 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
                         Low() < item.begin.Close && 
                         Open() > item.begin.Close && 
                         Close() < Open())
-                            SendAlert();
+                            sNextAlert = "volimbfill";
                     if (args.Reason == UpdateReason.NewBar && 
                         High() > item.begin.Close && 
                         Close() < item.begin.Close && 
                         Close() > Open())
-                            SendAlert();
+                        sNextAlert = "volimbfill";
                     item.end = candle;
                 }
             });
@@ -184,6 +231,7 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
                 Imbalance b = new Imbalance(prev, null);
                 if (!volImb.Contains(b))
                     volImb.Add(b);
+                sNextAlert = "volimb";
             }
 
             if ((Low() < lb || Low(1) < lb) &&
@@ -194,6 +242,7 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
                 //if (!barslist.Contains(b))
                 //    barslist.Add(b);
                 SetBarColor(Color.White);
+                sNextAlert = "engulf";
             }
 
             if ((High() > ub || High(1) > ub || High(2) > ub) &&
@@ -204,6 +253,7 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
                 //if (!barslist.Contains(b))
                 //    barslist.Add(b);
                 SetBarColor(Color.White);
+                sNextAlert = "engulf";
             }
 
             double rsi = Rsi.GetValue();
@@ -213,15 +263,15 @@ public sealed class IndicatorMovingAverageConvergenceDivergence : Indicator, IWa
             // TRAMPOLINE
             if (c0R && c1R && Close() < Close(1) && (rsi >= 70 || rsi1 >= 70 || rsi2 >= 70) && c2G && High(2) >= ub)
             {
-                Bars b = new Bars(candle, 1, Bars.HiLo.Short, Color.White);
-                if (!barslist.Contains(b))
-                    barslist.Add(b);
+                //Bars b = new Bars(candle, 1, Bars.HiLo.Short, Color.White);
+                //if (!barslist.Contains(b))
+                //    barslist.Add(b);
             }
             if (c0G && c1G && candle.Close > Close(1) && (rsi < 25 || rsi1 < 25 || rsi2 < 25) && c2R && Low(2) <= lb)
             {
-                Bars b = new Bars(candle, 1, Bars.HiLo.Long, Color.White);
-                if (!barslist.Contains(b))
-                    barslist.Add(b);
+                //Bars b = new Bars(candle, 1, Bars.HiLo.Long, Color.White);
+                //if (!barslist.Contains(b))
+                //    barslist.Add(b);
             }
 
         }
